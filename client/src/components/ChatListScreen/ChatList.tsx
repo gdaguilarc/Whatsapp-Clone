@@ -1,9 +1,9 @@
 import React from 'react';
 import moment from 'moment';
-import { chats } from '../../database/db';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import styled from 'styled-components';
+import { useState, useMemo } from 'react';
 
 const Container = styled.div`
   height: calc(100% - 56px);
@@ -56,7 +56,15 @@ const MessageDate = styled.div`
   font-size: 13px;
 `;
 
-const ChatsList = () => {
+function ChatsList() {
+  const [chats, setChats] = useState<any[]>([]);
+
+  useMemo(async () => {
+    const body = await fetch(`${process.env.REACT_APP_SERVER_URL}/chats`);
+    const chats = await body.json();
+    setChats(chats);
+  }, []);
+
   return (
     <Container>
       <StyledList>
@@ -79,6 +87,6 @@ const ChatsList = () => {
       </StyledList>
     </Container>
   );
-};
+}
 
 export default ChatsList;
