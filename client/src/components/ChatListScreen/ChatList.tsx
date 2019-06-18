@@ -3,7 +3,10 @@ import moment from 'moment';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import styled from 'styled-components';
-import { useState, useMemo } from 'react';
+import { useCallback } from 'react';
+import { History } from 'history';
+import gql from 'graphql-tag';
+import { useQuery } from 'react-apollo-hooks';
 
 const Container = styled.div`
   height: calc(100% - 56px);
@@ -56,7 +59,7 @@ const MessageDate = styled.div`
   font-size: 13px;
 `;
 
-const getChatsQuery = `
+export const getChatsQuery = gql`
   query GetChats {
     chats {
       id
@@ -71,30 +74,31 @@ const getChatsQuery = `
   }
 `;
 
-function ChatsList() {
-  const [chats, setChats] = useState<any[]>([]);
+interface ChatListProps {
+  history: History;
+}
 
-  useMemo(async () => {
-    const body = await fetch(`${process.env.REACT_APP_SERVER_URL}/graphql`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query: getChatsQuery }),
-    });
+const ChatsList: React.FC<ChatListProps> = ({ history }) => {
+  const {
+    data: { chats = [] },
+  } = useQuery<any>(getChatsQuery);
 
-    const {
-      data: { chats },
-    } = await body.json();
-
-    setChats(chats);
-  }, []);
+  const navToChat = useCallback(
+    chat => {
+      history.push(`chats/${chat.id}`);
+    },
+    [history],
+  );
 
   return (
     <Container>
       <StyledList>
-        {chats.map(chat => (
-          <StyledListItem key={chat.id} button>
+        {chats.map((chat: any) => (
+          <StyledListItem
+            key={chat.id}
+            data-testid="chat"
+            button
+            onClick={navToChat.bind(null, chat)}>
             <ChatPicture
               src={chat.picture}
               data-testid="picture"
@@ -118,6 +122,6 @@ function ChatsList() {
       </StyledList>
     </Container>
   );
-}
+};
 
 export default ChatsList;
