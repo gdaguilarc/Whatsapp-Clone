@@ -1,15 +1,16 @@
 import { GraphQLDateTime } from 'graphql-iso-date';
-import { chats, messages } from '../database/db';
+import { Message, chats, messages } from '../database/db';
+import { Resolvers } from '../types/graphql';
 
-const resolvers = {
+const resolvers: Resolvers = {
   Date: GraphQLDateTime,
   Chat: {
-    messages(chat: any) {
+    messages(chat) {
       return messages.filter(m => chat.messages.includes(m.id));
     },
-    lastMessage(chat: any) {
+    lastMessage(chat) {
       const lastMessage = chat.messages[chat.messages.length - 1];
-      return messages.find(m => m.id === lastMessage);
+      return messages.find(m => m.id === lastMessage) || null;
     },
   },
   Query: {
@@ -17,8 +18,39 @@ const resolvers = {
       return chats;
     },
 
-    chat(root: any, { chatId }: any) {
-      return chats.find(c => c.id === chatId);
+    chat(root, { chatId }) {
+      return chats.find(c => c.id === chatId) || null;
+    },
+  },
+
+  Mutation: {
+    addMessage(root, { chatId, content }) {
+      const chatIndex = chats.findIndex(c => c.id === chatId);
+
+      if (chatIndex === -1) return null;
+
+      const chat = chats[chatIndex];
+
+      const lastMessageId = chat.messages[chat.messages.length - 1];
+
+      const messageId = String(Number(lastMessageId) + 1);
+
+      const message: Message = {
+        id: messageId,
+        createdAt: new Date(),
+        content,
+      };
+
+      messages.push(message);
+
+      chat.messages.push(messageId);
+
+      // The chat will appear at the top of the ChatsList component
+      chats.splice(chatIndex, 1);
+
+      chats.unshift(chat);
+
+      return message;
     },
   },
 };

@@ -15,3 +15,7 @@ type Query {
   chats: [Chat!]!
   chat(chatId: ID!): Chat
 }
+
+type Mutation {
+  addMessage(chatId: ID!, content: String!): Message
+}

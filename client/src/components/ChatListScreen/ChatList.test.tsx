@@ -1,6 +1,8 @@
 import React from 'react';
 import { ApolloProvider } from 'react-apollo-hooks';
 import ReactDOM from 'react-dom';
+import * as queries from '../../graphql/queries';
+
 import {
   cleanup,
   render,
@@ -21,7 +23,7 @@ describe('ChatsList', () => {
   it('renders fetched chats data', async () => {
     const client = mockApolloClient([
       {
-        request: { query: getChatsQuery },
+        request: { query: queries.chats },
         result: {
           data: {
             chats: [
@@ -65,7 +67,7 @@ describe('ChatsList', () => {
   it('should navigate to the target chat room on chat item click', async () => {
     const client = mockApolloClient([
       {
-        request: { query: getChatsQuery },
+        request: { query: queries.chats },
         result: {
           data: {
             chats: [
