@@ -1,12 +1,18 @@
 import { createTestClient } from 'apollo-server-testing';
-import { ApolloServer, gql } from 'apollo-server-express';
 import schema from '../../schema';
-import { resetDb } from '../../database/db';
+import { ApolloServer, PubSub, gql } from 'apollo-server-express';
+import { resetDb, users } from '../../database/db';
 
 describe('Mutation.addMessage', () => {
   beforeEach(resetDb);
   it('should add message to specified chat', async () => {
-    const server = new ApolloServer({ schema });
+    const server = new ApolloServer({
+      schema,
+      context: () => ({
+        pubsub: new PubSub(),
+        currentUser: users[0],
+      }),
+    });
     const { query, mutate } = createTestClient(server);
     const addMessageRes = await mutate({
       variables: { chatId: '1', content: 'Hello World' },

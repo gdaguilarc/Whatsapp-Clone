@@ -8,8 +8,10 @@ import {
   RouteComponentProps,
 } from 'react-router-dom';
 import AnimatedSwitch from './AnimatedSwitch';
+import { useCacheService } from '../services/cache.service';
 
 const App: React.FC = () => {
+  useCacheService();
   return (
     <BrowserRouter>
       <AnimatedSwitch>

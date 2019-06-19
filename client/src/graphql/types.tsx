@@ -1,7 +1,7 @@
 /* eslint-disable */
 import gql from 'graphql-tag';
-import * as ReactApollo from 'react-apollo';
 import * as ReactApolloHooks from 'react-apollo-hooks';
+import * as ReactApollo from 'react-apollo';
 export type Maybe<T> = T | null;
 export type MaybePromise<T> = Promise<T> | T;
 /** All built-in and custom scalars, mapped to their actual values */
@@ -17,10 +17,11 @@ export type Scalars = {
 export type Chat = {
   __typename?: 'Chat';
   id: Scalars['ID'];
-  name: Scalars['String'];
+  name?: Maybe<Scalars['String']>;
   picture?: Maybe<Scalars['String']>;
   lastMessage?: Maybe<Message>;
   messages: Array<Message>;
+  participants: Array<User>;
 };
 
 export type Message = {
@@ -28,6 +29,10 @@ export type Message = {
   id: Scalars['ID'];
   content: Scalars['String'];
   createdAt: Scalars['Date'];
+  chat?: Maybe<Chat>;
+  sender?: Maybe<User>;
+  recipient?: Maybe<User>;
+  isMine: Scalars['Boolean'];
 };
 
 export type Mutation = {
@@ -49,6 +54,26 @@ export type Query = {
 export type QueryChatArgs = {
   chatId: Scalars['ID'];
 };
+
+export type Subscription = {
+  __typename?: 'Subscription';
+  messageAdded: Message;
+};
+
+export type User = {
+  __typename?: 'User';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  picture?: Maybe<Scalars['String']>;
+};
+export type GetChatQueryVariables = {
+  chatId: Scalars['ID'];
+};
+
+export type GetChatQuery = { __typename?: 'Query' } & {
+  chat: Maybe<{ __typename?: 'Chat' } & FullChatFragment>;
+};
+
 export type AddMessageMutationVariables = {
   chatId: Scalars['ID'];
   content: Scalars['String'];
@@ -56,14 +81,6 @@ export type AddMessageMutationVariables = {
 
 export type AddMessageMutation = { __typename?: 'Mutation' } & {
   addMessage: Maybe<{ __typename?: 'Message' } & MessageFragment>;
-};
-
-export type GetChatQueryVariables = {
-  chatId: Scalars['ID'];
-};
-
-export type GetChatQuery = { __typename?: 'Query' } & {
-  chat: Maybe<{ __typename?: 'Chat' } & FullChatFragment>;
 };
 
 export type ChatFragment = { __typename?: 'Chat' } & Pick<
@@ -77,19 +94,29 @@ export type FullChatFragment = { __typename?: 'Chat' } & {
 
 export type MessageFragment = { __typename?: 'Message' } & Pick<
   Message,
-  'id' | 'createdAt' | 'content'
->;
+  'id' | 'createdAt' | 'content' | 'isMine'
+> & { chat: Maybe<{ __typename?: 'Chat' } & Pick<Chat, 'id'>> };
 
 export type ChatsQueryVariables = {};
 
 export type ChatsQuery = { __typename?: 'Query' } & {
   chats: Array<{ __typename?: 'Chat' } & ChatFragment>;
 };
+
+export type MessageAddedSubscriptionVariables = {};
+
+export type MessageAddedSubscription = { __typename?: 'Subscription' } & {
+  messageAdded: { __typename?: 'Message' } & MessageFragment;
+};
 export const MessageFragmentDoc = gql`
   fragment Message on Message {
     id
     createdAt
     content
+    isMine
+    chat {
+      id
+    }
   }
 `;
 export const ChatFragmentDoc = gql`
@@ -113,6 +140,23 @@ export const FullChatFragmentDoc = gql`
   ${ChatFragmentDoc}
   ${MessageFragmentDoc}
 `;
+export const GetChatDocument = gql`
+  query GetChat($chatId: ID!) {
+    chat(chatId: $chatId) {
+      ...FullChat
+    }
+  }
+  ${FullChatFragmentDoc}
+`;
+
+export function useGetChatQuery(
+  baseOptions?: ReactApolloHooks.QueryHookOptions<GetChatQueryVariables>,
+) {
+  return ReactApolloHooks.useQuery<GetChatQuery, GetChatQueryVariables>(
+    GetChatDocument,
+    baseOptions,
+  );
+}
 export const AddMessageDocument = gql`
   mutation AddMessage($chatId: ID!, $content: String!) {
     addMessage(chatId: $chatId, content: $content) {
@@ -137,23 +181,6 @@ export function useAddMessageMutation(
     AddMessageMutationVariables
   >(AddMessageDocument, baseOptions);
 }
-export const GetChatDocument = gql`
-  query GetChat($chatId: ID!) {
-    chat(chatId: $chatId) {
-      ...FullChat
-    }
-  }
-  ${FullChatFragmentDoc}
-`;
-
-export function useGetChatQuery(
-  baseOptions?: ReactApolloHooks.QueryHookOptions<GetChatQueryVariables>,
-) {
-  return ReactApolloHooks.useQuery<GetChatQuery, GetChatQueryVariables>(
-    GetChatDocument,
-    baseOptions,
-  );
-}
 export const ChatsDocument = gql`
   query Chats {
     chats {
@@ -170,4 +197,24 @@ export function useChatsQuery(
     ChatsDocument,
     baseOptions,
   );
+}
+export const MessageAddedDocument = gql`
+  subscription MessageAdded {
+    messageAdded {
+      ...Message
+    }
+  }
+  ${MessageFragmentDoc}
+`;
+
+export function useMessageAddedSubscription(
+  baseOptions?: ReactApolloHooks.SubscriptionHookOptions<
+    MessageAddedSubscription,
+    MessageAddedSubscriptionVariables
+  >,
+) {
+  return ReactApolloHooks.useSubscription<
+    MessageAddedSubscription,
+    MessageAddedSubscriptionVariables
+  >(MessageAddedDocument, baseOptions);
 }
