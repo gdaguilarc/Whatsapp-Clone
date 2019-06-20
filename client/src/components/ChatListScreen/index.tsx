@@ -16,7 +16,7 @@ const ChatListScreen: React.FC<ChatsListProps> = ({ history }) => {
   return (
     <>
       <Container>
-        <ChatsNavBar />
+        <ChatsNavBar history={history} />
         <ChatsList history={history} />
       </Container>
     </>

@@ -10,7 +10,9 @@ const wsUri = httpUri.replace(/^https?/, 'ws');
 
 const httpLink = new HttpLink({
   uri: httpUri,
+  credentials: 'include',
 });
+
 const wsLink = new WebSocketLink({
   uri: wsUri,
   options: {
@@ -18,6 +20,7 @@ const wsLink = new WebSocketLink({
     reconnect: true,
   },
 });
+
 const terminatingLink = split(
   ({ query }) => {
     const { kind, operation } = getMainDefinition(query);
@@ -27,9 +30,11 @@ const terminatingLink = split(
   wsLink,
   httpLink,
 );
+
 const link = ApolloLink.from([terminatingLink]);
 
 const inMemoryCache = new InMemoryCache();
+
 export default new ApolloClient({
   link,
   cache: inMemoryCache,
