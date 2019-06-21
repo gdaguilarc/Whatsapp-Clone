@@ -9,6 +9,7 @@ import {
   RouteComponentProps,
 } from 'react-router-dom';
 import AnimatedSwitch from './AnimatedSwitch';
+import ChatCreationScreen from './ChatCreationScreen';
 import { withAuth } from '../services/auth.service';
 
 const App: React.FC = () => (
@@ -25,6 +26,7 @@ const App: React.FC = () => (
           ),
         )}
       />
+      <Route exact path="/new-chat" component={withAuth(ChatCreationScreen)} />
     </AnimatedSwitch>
     <Route exact path="/" render={redirectToChats} />
   </BrowserRouter>
